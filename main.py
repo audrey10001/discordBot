@@ -17,9 +17,54 @@ helpCommand = commands.DefaultHelpCommand(no_category = "commands")
 
 bot = commands.Bot(command_prefix = "!audrey", intents = intents)
 
+
+
+
 @bot.event
 async def on_connect():
   print("your bot is online")
+
+# word list: https://github.com/Xethron/Hangman/blob/master/words.txt
+  
+# imports list of words 
+words = open("words.txt").read().splitlines()
+@bot.command()
+async def hangman(ctx):
+  # pick a word
+  word = random.choice(words)
+  # send blank spaces for number of letters
+  blank = ""
+  for i in range(len(word)):
+    blank += "- "
+  await ctx.send(blank)
+  # next: gets input letter, if char is in word,
+  #    changes blank, prints blank + hangman image
+  # increments count for every incorrect letter
+  # game ends when count > 6 or when there are no
+  #    blank spaces in blank
+  
+  #count = 0
+  # get input letter (via reactions?)
+  # if char is in word (else, count += 1, draw hangman structure):
+  # for every guessed letter:
+  #   for char in word:
+  #     if char == letter:
+  #       blank += letter + " "
+  #     else:
+  #       blank += "- "
+  #   send blank
+  # if count >= 6: end game
+
+
+
+
+
+
+
+
+
+
+
 
 @bot.command(brief = "have the bot say hello!")
 async def audrey(ctx):
@@ -284,18 +329,41 @@ async def dog(ctx):
 
 
 
-@bot.command()
-async def spotifySearch(ctx, *, query:str):
+@bot.command(brief = "search spotify for albums and playlists")
+async def spotify(ctx, *, query:str):
   url = "https://api.apilayer.com/spotify/search?q=" + query
   await ctx.send("searching spotify for " + query)
   payload = {}
+  spotifyAPI = os.environ["spotifyAPI"]
   headers= {
-    "apikey": "Q6tJHtYFYAHPoFF95EfYbuDI5YRmVM2Z"
+    "apikey": spotifyAPI
   }
   
   response = requests.request("GET", url, headers=headers, data = payload)
   
-  status_code = response.status_code
+  data = response.json()
+
+  # send the name of the album + the artist
+  await ctx.send(data["albums"]["items"][0]["data"]["name"] + " by " + data["albums"]["items"][0]["data"]["artists"]["items"][0]["profile"]["name"])
+  # get the album's id
+  uri = data["albums"]["items"][0]["data"]["uri"]
+  uri = uri[14:len(uri)]
+  # add the id into a url and send it
+  url = "https://open.spotify.com/album/" + uri
+  await ctx.send(url)
+
+  # get the first playlist's name
+  await ctx.send(data["playlists"]["items"][0]["data"]["name"])
+  # get playlist id
+  uri = data["playlists"]["items"][0]["data"]["uri"]
+  uri = uri[17:len(uri)]
+  # send the url
+  url = "https://open.spotify.com/playlist/" + uri
+  await ctx.send(url)
+
+
+  """
+#status_code = response.status_code
   #result = response.text
   data = response.json()
   #print(response)
@@ -304,7 +372,7 @@ async def spotifySearch(ctx, *, query:str):
   #print("\n\n\n\n\n\n\n\n\nthis is it")
   #print(data["albums"]["items"][0]["data"])
   #print("\n\n\n\n\n\n\n\n\nthis is it")
-  await ctx.send(data["albums"]["items"][0]["data"]["name"] + "by" +data["albums"]["items"][0]["data"]["artists"]["items"][0]["profile"]["name"])
+  await ctx.send(data["albums"]["items"][0]["data"]["name"] + " by " +data["albums"]["items"][0]["data"]["artists"]["items"][0]["profile"]["name"])
   #print(data["albums"]["items"][0]["data"]["coverArt"]["sources"][0]["url"])
   uri = data["albums"]["items"][0]["data"]["uri"]
   
@@ -320,6 +388,7 @@ async def spotifySearch(ctx, *, query:str):
   uri = uri[17:len(uri)]
   url = "https://open.spotify.com/playlist/" + uri
   await ctx.send(url)
+  """
 
 
 
